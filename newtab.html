@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi" id="htmlRoot">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body data-theme="aurora">
+
+  <div class="bg-layer" id="bgLayer"></div>
+  <div class="bg-image-layer" id="bgImageLayer"></div>
+  <div class="bg-overlay" id="bgOverlay"></div>
+  <div class="stars-container" id="starsContainer"></div>
+
+  <div class="waves-container" id="wavesContainer">
+    <svg class="wave wave-1" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,224L48,213C96,203,192,181,288,181C384,181,480,203,576,219C672,235,768,245,864,235C960,224,1056,192,1152,181C1248,171,1344,181,1392,187L1440,192L1440,320L0,320Z"></path>
+    </svg>
+    <svg class="wave wave-2" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,288L48,272C96,256,192,224,288,213C384,203,480,213,576,229C672,245,768,267,864,261C960,256,1056,224,1152,208C1248,192,1344,192,1392,192L1440,192L1440,320L0,320Z"></path>
+    </svg>
+    <svg class="wave wave-3" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,256L48,261C96,267,192,277,288,272C384,267,480,245,576,235C672,224,768,224,864,235C960,245,1056,267,1152,261C1248,256,1344,224,1392,208L1440,192L1440,320L0,320Z"></path>
+    </svg>
+  </div>
+
+  <main class="main-content">
+    <div class="glass-card">
+      <div class="greeting" id="greeting">Xin chào</div>
+      <div class="clock" id="clock">00:00</div>
+      <div class="date" id="dateDisplay"></div>
+    </div>
+    <div class="search-wrapper">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm trên Google..." autocomplete="off">
+      </div>
+    </div>
+  </main>
+
+  <button class="settings-btn" id="settingsBtn" title="Cài đặt nền">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+    </svg>
+  </button>
+
+  <div class="settings-overlay" id="settingsOverlay"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <h2 data-i18n="settings_title">Cài đặt nền</h2>
+      <div class="header-actions">
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="vi" id="langVi">VI</button>
+          <button class="lang-btn" data-lang="en" id="langEn">EN</button>
+        </div>
+        <button class="close-btn" id="closeSettings">&times;</button>
+      </div>
+    </div>
+    <div class="settings-body">
+
+      <div class="settings-section">
+        <h3 data-i18n="section_theme">Chọn kiểu nền</h3>
+        <div class="theme-grid" id="themeGrid">
+          <button class="theme-card active" data-theme="aurora">
+            <div class="theme-preview aurora-preview"></div>
+            <span>Aurora</span>
+          </button>
+          <button class="theme-card" data-theme="ocean">
+            <div class="theme-preview ocean-preview"></div>
+            <span>Deep Ocean</span>
+          </button>
+          <button class="theme-card" data-theme="sunset">
+            <div class="theme-preview sunset-preview"></div>
+            <span>Sunset</span>
+          </button>
+          <button class="theme-card" data-theme="cosmic">
+            <div class="theme-preview cosmic-preview"></div>
+            <span>Cosmic</span>
+          </button>
+          <button class="theme-card" data-theme="forest">
+            <div class="theme-preview forest-preview"></div>
+            <span>Forest</span>
+          </button>
+          <button class="theme-card" data-theme="minimal">
+            <div class="theme-preview minimal-preview"></div>
+            <span>Minimal</span>
+          </button>
+          <button class="theme-card" data-theme="custom">
+            <div class="theme-preview custom-preview">{ }</div>
+            <span>Custom CSS</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="section_image">Background Image</h3>
+        <p class="css-hint" id="imgHintEl" data-i18n="img_hint">Enter an HTTPS image URL to set as background.</p>
+        <div class="img-input-row">
+          <input type="url" id="bgImageUrl" class="img-url-input" placeholder="https://example.com/photo.jpg" autocomplete="off">
+          <button class="apply-img-btn" id="applyImageBtn" title="Apply">✓</button>
+        </div>
+        <div class="img-options-row">
+          <label class="img-option-label">
+            <span data-i18n="img_opacity_label">Image opacity</span>
+            <input type="range" id="bgImageOpacity" min="10" max="100" value="60" class="opacity-slider">
+            <span id="opacityValue">60%</span>
+          </label>
+        </div>
+        <button class="remove-img-btn" id="removeImageBtn" data-i18n="img_remove">Remove image</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="section_glass">Frosted Glass</h3>
+        <div class="toggle-row">
+          <label class="toggle-label" for="glassToggle" data-i18n="glass_toggle_label">Glass blur effect</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="glassToggle" checked>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label" for="glassIntensity" data-i18n="glass_blur_label">Blur amount</label>
+          <input type="range" id="glassIntensity" min="4" max="40" value="20" class="opacity-slider">
+          <span id="glassValue">20px</span>
+        </div>
+      </div>
+
+      <div class="settings-section css-editor-section" id="cssEditorSection">
+        <h3 data-i18n="section_css">Custom CSS</h3>
+        <p class="css-hint" id="cssHintEl">Write CSS to customize. Use <code>body</code> or <code>.bg-layer</code></p>
+        <textarea id="cssEditor" class="css-editor" spellcheck="false" placeholder="body {&#10;  background: linear-gradient(135deg, #667eea, #764ba2);&#10;}"></textarea>
+        <button class="apply-css-btn" id="applyCssBtn" data-i18n="apply_css">Apply CSS</button>
+      </div>
+
+    </div>
+  </div>
+
+  <style id="customCssStyle"></style>
+  <script src="newtab.js"></script>
+</body>
+</html>
