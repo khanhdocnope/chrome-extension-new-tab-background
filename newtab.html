@@ -182,22 +182,35 @@
               </div>
               
               <div class="time-bg-inputs" id="timeBgInputs">
-                <p class="css-hint" data-i18n="time_bg_hint">Thiết lập ảnh khác nhau cho Sáng, Chiều, Tối, Đêm.</p>
+                <p class="css-hint" data-i18n="time_bg_hint">Thiết lập ảnh khác nhau cho Sáng, Trưa, Chiều, Tối, Đêm.</p>
+                
+                <!-- Dynamic sun times toggle -->
+                <div class="toggle-row" style="margin-bottom: 10px;">
+                  <label class="toggle-label" for="dynamicSunToggle" data-i18n="dynamic_sun_toggle">Đồng bộ thời gian mặt trời (IP)</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="dynamicSunToggle" checked>
+                    <span class="toggle-thumb"></span>
+                  </label>
+                </div>
                 
                 <div class="time-input-group">
-                  <label data-i18n="time_morning">Sáng (05:00 - 12:00)</label>
+                  <label data-i18n="time_morning">Sáng (mặt trời mọc)</label>
                   <input type="url" id="bgMorning" class="img-url-input" placeholder="https://..." autocomplete="off">
                 </div>
                 <div class="time-input-group">
-                  <label data-i18n="time_afternoon">Chiều (12:00 - 18:00)</label>
+                  <label data-i18n="time_noon">Trưa (giữa ngày ± 1.5h)</label>
+                  <input type="url" id="bgNoon" class="img-url-input" placeholder="https://..." autocomplete="off">
+                </div>
+                <div class="time-input-group">
+                  <label data-i18n="time_afternoon">Chiều (giữa ngày đến lặn)</label>
                   <input type="url" id="bgAfternoon" class="img-url-input" placeholder="https://..." autocomplete="off">
                 </div>
                 <div class="time-input-group">
-                  <label data-i18n="time_evening">Tối (18:00 - 22:00)</label>
+                  <label data-i18n="time_evening">Tối (sau khi lặn)</label>
                   <input type="url" id="bgEvening" class="img-url-input" placeholder="https://..." autocomplete="off">
                 </div>
                 <div class="time-input-group">
-                  <label data-i18n="time_night">Đêm (22:00 - 05:00)</label>
+                  <label data-i18n="time_night">Đêm (còn lại)</label>
                   <input type="url" id="bgNight" class="img-url-input" placeholder="https://..." autocomplete="off">
                 </div>
                 

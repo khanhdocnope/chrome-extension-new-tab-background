@@ -1,6 +1,6 @@
-# ✨ Custom New Tab Background
+# ✨ Custom New Tab Background & Productivity Dashboard
 
-> A Chrome Extension that replaces the default New Tab page with a beautiful, fully customizable background — supporting animated gradients, background images, frosted glass effects, and custom CSS.
+> A premium, high-performance Chrome Extension that transforms your default New Tab into a beautiful productivity dashboard. Featuring dynamic backgrounds, a focus-oriented Todo widget, and extensive customization options.
 
 ![Manifest](https://img.shields.io/badge/Manifest-V3-blue?style=flat-square)
 ![Chrome](https://img.shields.io/badge/Chrome-Extension-yellow?style=flat-square&logo=googlechrome)
@@ -8,84 +8,46 @@
 
 ---
 
-## 🖼️ Features
+## 🖼️ Key Features
 
-- 🎨 **6 built-in gradient themes** — Aurora, Deep Ocean, Sunset, Cosmic, Forest, Minimal Dark
-- 🖼️ **Background image** — set any HTTPS image URL as wallpaper with adjustable opacity
-- 🧊 **Frosted glass card** — glassmorphism clock panel with adjustable blur intensity
-- ✏️ **Custom CSS editor** — write your own CSS to fully customize the look
-- 🕐 **Real-time clock** — displays time, date, and context-aware greeting
-- 🔍 **Google Search bar** — search directly from the New Tab page
-- 🌐 **Bilingual UI** — switch between Vietnamese (VI) and English (EN)
-- 💾 **Persistent settings** — all preferences saved via `chrome.storage.local`
+### 🚀 Productivity Tools
+- ✅ **Daily Focus Widget** — Integrated Todo list with glassmorphism UI to keep you on track.
+- 🔄 **Settings Import/Export** — Easily backup and restore your entire configuration (CSS, tasks, and settings) via JSON.
+
+### 🌅 Dynamic Background System
+- ⛅ **Dynamic Sun Times (IP-Sync)** — Automatically syncs background periods (Morning, Noon, Afternoon, Evening, Night) with real-world sunrise/sunset times based on your IP location.
+- 🌞 **New "Noon" (Trưa) Session** — Added a dedicated 5th time-based period for better day progression.
+- 🎲 **Dynamic Keyword Backgrounds** — Toggle "Dynamic Keyword" to fetch random high-quality images from Unsplash/LoremFlickr based on your custom keywords (e.g., `nature`, `cyberpunk`).
+- 📁 **Local Image Upload** — Upload and save your own wallpapers directly to **IndexedDB** for high-performance, quota-free storage.
+
+### 🎨 Design & Aesthetics
+- 🎨 **6 Premium Themes** — Aurora, Deep Ocean, Sunset, Cosmic, Forest, Minimal Dark.
+- 🧊 **Glassmorphism UI** — Clock and Todo panels with adjustable frosting effects and blur.
+- ✏️ **Pro CSS Editor** — Write your own CSS with a live preview.
+- 🌐 **Full Bilingual Support** — Seamlessly toggle between Vietnamese (VI) and English (EN).
 
 ---
 
-## 📁 Project Structure
+## 🛠️ Advanced Logic
 
-```
-chrome-extension/
-├── manifest.json        # Extension config (Manifest V3)
-├── newtab.html          # New Tab page markup
-├── newtab.css           # Styles, themes, animations
-├── newtab.js            # Logic: clock, themes, i18n, storage
-├── custom_suggest.md    # 10 ready-to-use Custom CSS snippets
-└── icons/
-    ├── icon16.png
-    ├── icon48.png
-    └── icon128.png
-```
+### ⚡ Smart Caching (Sun Times)
+To ensure performance and avoid rate limits, the extension caches your location-based sun times (sunrise, sunset, solar noon) in `localStorage`. 
+- **Fetch Frequency**: At most once per 24 hours.
+- **Offline Resilience**: Automatically falls back to standard fixed times (05:00, 11:00, 13:00, 18:00, 22:00) if you're offline or the API fails.
+
+### 📦 Storage Strategy
+- **IndexedDB**: Used for local image uploads to bypass `chrome.storage.local` size limitations.
+- **Chrome Storage**: Used for all other settings and Todo tasks to ensure fast retrieval.
 
 ---
 
 ## 🚀 Installation (Developer Mode)
 
-1. Clone or download this repository
-   ```bash
-   git clone https://github.com/your-username/custom-newtab.git
-   ```
-
-2. Open Chrome and navigate to:
-   ```
-   chrome://extensions
-   ```
-
-3. Enable **Developer mode** (toggle in the top-right corner)
-
-4. Click **"Load unpacked"** and select the project folder
-
-5. Open a **New Tab** — enjoy! 🎉
-
----
-
-## 🎨 Built-in Themes
-
-| Theme | Description |
-|-------|-------------|
-| **Aurora** | Animated purple-blue aurora borealis |
-| **Deep Ocean** | Dark navy with flowing wave SVGs |
-| **Sunset** | Warm orange-gold gradient |
-| **Cosmic** | Deep space purple with twinkling stars |
-| **Forest** | Rich green nature tones |
-| **Minimal Dark** | Clean dark background with soft glow |
-| **Custom CSS** | Full control via your own CSS |
-
----
-
-## ✏️ Custom CSS Examples
-
-See [`custom_suggest.md`](./custom_suggest.md) for 10 ready-to-paste CSS snippets including:
-
-- 🌈 Liquid Aurora animated gradient
-- ☀️ Sunrise Horizon
-- 💎 Crystal Dark
-- 🌊 Deep Neon Ocean
-- 🔴 Cyberpunk Red with flicker effect
-- 🌿 Emerald Forest
-- 🪐 Space Dust with hue-rotate
-- 🌺 Rose Gold
-- ⬛ Monochrome Minimal
-- 🔮 Holographic rainbow clock
+1. Clone or download this repository.
+2. Open Chrome and navigate to `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Click **"Load unpacked"** and select this project folder.
+5. Enjoy your new dashboard! 🎉
 
 ---
 
@@ -93,63 +55,11 @@ See [`custom_suggest.md`](./custom_suggest.md) for 10 ready-to-paste CSS snippet
 
 | Permission | Reason |
 |------------|--------|
-| `storage` | Save user preferences (theme, image URL, CSS, language) |
-| `host_permissions: <all_urls>` | Load background images from any HTTPS source |
-
----
-
-## 🛠️ Tech Stack
-
-- **HTML5** — Semantic markup
-- **Vanilla CSS** — Custom properties, animations, glassmorphism
-- **Vanilla JavaScript** — No dependencies, no frameworks
-- **Chrome Extensions API (MV3)** — `chrome.storage.local`, `chrome_url_overrides`
-
----
-
-## 🌐 i18n — Language Support
-
-Switch between **Vietnamese** and **English** using the `VI / EN` toggle in the settings panel. Translated elements include:
-
-- All settings panel labels and section headers
-- Search bar placeholder
-- Clock greeting messages
-- Date format (`Thứ hai, 23 tháng 4 2026` ↔ `Monday, April 23, 2026`)
-- Error messages
+| `storage` | Save user preferences, CSS, and Todo tasks. |
+| `host_permissions: <all_urls>` | Fetch dynamic sun times (ipapi/sunrise-sunset) and external background images. |
 
 ---
 
 ## 📝 License
 
 MIT License — feel free to use, modify, and distribute.
-
----
-
-## 🙌 Contributing
-
-Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
-
-### Steps
-
-1. **Fork** this repository
-2. **Create** a feature branch
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. **Make** your changes and test by loading the extension unpacked in Chrome
-4. **Commit** with a clear message
-   ```bash
-   git commit -m "feat: describe your change"
-   ```
-5. **Push** to your fork
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-6. **Open a Pull Request** — describe what changed and why
-
-### Ideas for contributions
-
-- 🌍 Add more language translations
-- 🎨 Contribute new CSS themes to `custom_suggest.md`
-- 🧩 Add new widgets (weather, bookmarks, notes...)
-- 🐛 Report or fix bugs via [Issues](../../issues)

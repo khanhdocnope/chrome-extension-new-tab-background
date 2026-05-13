@@ -66,19 +66,22 @@ const LANGS = {
     css_hint_html:     'Viết CSS để tùy chỉnh nền. Dùng selector <code>body</code> hoặc <code>.bg-layer</code>',
     error_img:         'Không tải được ảnh!\nKiểm tra lại:\n• URL có đúng không?\n• Ảnh có phải HTTPS không?\n• Ảnh có cho phép truy cập từ ngoài không?',
     greeting_morning:  '☀️ Chào buổi sáng',
+    greeting_noon:     '🌞 Chào buổi trưa',
     greeting_afternoon:'🌤️ Chào buổi chiều',
     greeting_evening:  '🌆 Chào buổi tối',
     greeting_night:    '🌙 Chúc ngủ ngon',
     advanced_settings: 'Cài đặt nâng cao',
     time_bg_toggle:    'Ảnh nền theo thời gian',
-    time_bg_hint:      'Thiết lập ảnh khác nhau cho Sáng, Chiều, Tối, Đêm.',
-    time_morning:      'Sáng (05:00 - 12:00)',
-    time_afternoon:    'Chiều (12:00 - 18:00)',
-    time_evening:      'Tối (18:00 - 22:00)',
-    time_night:        'Đêm (22:00 - 05:00)',
+    time_bg_hint:      'Thiết lập ảnh khác nhau cho Sáng, Trưa, Chiều, Tối, Đêm.',
+    time_morning:      'Sáng (mặt trời mọc)',
+    time_noon:         'Trưa (giữa ngày ± 1.5h)',
+    time_afternoon:    'Chiều (giữa ngày đến lặn)',
+    time_evening:      'Tối (sau khi lặn)',
+    time_night:        'Đêm (còn lại)',
     apply_time_bg:     'Áp dụng Ảnh theo thời gian',
     local_upload:      'Tải ảnh lên (Local)',
     unsplash_toggle:   'Ảnh nền theo từ khóa',
+    dynamic_sun_toggle:'Đồng bộ mặt trời theo IP',
     todo_title:        'Mục tiêu hôm nay',
     section_sync:      'Dữ liệu & Đồng bộ',
     export_settings:   'Xuất cấu hình',
@@ -101,19 +104,22 @@ const LANGS = {
     css_hint_html:     'Write CSS to customize the background. Use <code>body</code> or <code>.bg-layer</code>',
     error_img:         'Failed to load image!\nPlease check:\n• Is the URL correct?\n• Is it HTTPS?\n• Does the server allow external access?',
     greeting_morning:  '☀️ Good morning',
+    greeting_noon:     '🌞 Good noon',
     greeting_afternoon:'🌤️ Good afternoon',
     greeting_evening:  '🌆 Good evening',
     greeting_night:    '🌙 Good night',
     advanced_settings: 'Advanced Settings',
     time_bg_toggle:    'Time-based background',
-    time_bg_hint:      'Set different images for morning, afternoon, evening, and night.',
-    time_morning:      'Morning (05:00 - 12:00)',
-    time_afternoon:    'Afternoon (12:00 - 18:00)',
-    time_evening:      'Evening (18:00 - 22:00)',
-    time_night:        'Night (22:00 - 05:00)',
+    time_bg_hint:      'Set different images for morning, noon, afternoon, evening, and night.',
+    time_morning:      'Morning (around sunrise)',
+    time_noon:         'Noon (solar noon ± 1.5h)',
+    time_afternoon:    'Afternoon (noon to sunset)',
+    time_evening:      'Evening (after sunset)',
+    time_night:        'Night (remaining)',
     apply_time_bg:     'Apply Time Backgrounds',
     local_upload:      'Upload Local Image',
     unsplash_toggle:   'Dynamic Keyword Image',
+    dynamic_sun_toggle:'Sync sun times (IP-based)',
     todo_title:        'Daily Focus',
     section_sync:      'Data & Sync',
     export_settings:   'Export Settings',
@@ -158,6 +164,7 @@ const timeBgToggle      = document.getElementById('timeBgToggle');
 const timeBgInputs      = document.getElementById('timeBgInputs');
 const applyTimeBgBtn    = document.getElementById('applyTimeBgBtn');
 const bgMorning         = document.getElementById('bgMorning');
+const bgNoon            = document.getElementById('bgNoon');
 const bgAfternoon       = document.getElementById('bgAfternoon');
 const bgEvening         = document.getElementById('bgEvening');
 const bgNight           = document.getElementById('bgNight');
@@ -167,6 +174,9 @@ const unsplashToggle    = document.getElementById('unsplashToggle');
 const unsplashInputs    = document.getElementById('unsplashInputs');
 const unsplashInput     = document.getElementById('unsplashInput');
 const applyUnsplashBtn  = document.getElementById('applyUnsplashBtn');
+
+// Dynamic Sun Times
+const dynamicSunToggle  = document.getElementById('dynamicSunToggle');
 
 // Sync
 const exportSettingsBtn = document.getElementById('exportSettingsBtn');
@@ -182,11 +192,14 @@ let glassEnabled    = true;
 let glassBlur       = 20;
 let currentLang     = 'vi';
 let timeBgEnabled   = false;
-let timeBgUrls      = { morning: '', afternoon: '', evening: '', night: '' };
+let timeBgUrls      = { morning: '', noon: '', afternoon: '', evening: '', night: '' };
 let currentPeriod   = ''; // tracks the active time period
 let unsplashKeyword = '';
 let unsplashEnabled = false;
 let tasksList       = [];
+// Sun times cache
+let sunTimes        = null; // { sunrise, sunset, solar_noon } as minutes-from-midnight
+let sunTimesFetched = false;
 
 // ===== I18N =====
 function applyLanguage(lang) {
@@ -212,6 +225,90 @@ function applyLanguage(lang) {
   updateClock();
 }
 
+// ===== DYNAMIC SUN TIMES =====
+const SUN_CACHE_KEY = 'sunTimesCache';
+const SUN_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+let dynamicSunEnabled = true; // default: enabled
+
+async function fetchDynamicSunTimes() {
+  // Check cache first
+  try {
+    const raw = localStorage.getItem(SUN_CACHE_KEY);
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (Date.now() - cached.timestamp < SUN_CACHE_TTL) {
+        sunTimes = cached.times;
+        sunTimesFetched = true;
+        return;
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  try {
+    // Step 1: Get lat/lon from IP
+    const geoResp = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
+    if (!geoResp.ok) throw new Error('geo failed');
+    const geo = await geoResp.json();
+    const { latitude, longitude } = geo;
+    if (!latitude || !longitude) throw new Error('no coords');
+
+    // Step 2: Get sun times
+    const sunResp = await fetch(
+      `https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&formatted=0`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!sunResp.ok) throw new Error('sun api failed');
+    const sunData = await sunResp.json();
+    if (sunData.status !== 'OK') throw new Error('sun api status not OK');
+
+    // Parse UTC ISO strings → local minutes-from-midnight
+    const toLocalMins = (iso) => {
+      const d = new Date(iso);
+      return d.getHours() * 60 + d.getMinutes();
+    };
+
+    sunTimes = {
+      sunrise:    toLocalMins(sunData.results.sunrise),
+      solar_noon: toLocalMins(sunData.results.solar_noon),
+      sunset:     toLocalMins(sunData.results.sunset),
+    };
+    sunTimesFetched = true;
+
+    // Persist cache
+    localStorage.setItem(SUN_CACHE_KEY, JSON.stringify({
+      timestamp: Date.now(),
+      times: sunTimes
+    }));
+  } catch (e) {
+    // Offline or API error – silently fall back to fixed defaults
+    console.warn('[SunTimes] Falling back to fixed times:', e.message);
+    sunTimes = null;
+    sunTimesFetched = true; // mark fetched so we don't retry on every tick
+  }
+}
+
+function getSunPeriod(nowMins) {
+  // Dynamic boundaries based on fetched sun times
+  if (sunTimes) {
+    const { sunrise, solar_noon, sunset } = sunTimes;
+    const noonStart = solar_noon - 90;
+    const noonEnd   = solar_noon + 90;
+    const eveningEnd = sunset + 180;
+    if      (nowMins >= sunrise   && nowMins < noonStart)  return 'morning';
+    else if (nowMins >= noonStart && nowMins < noonEnd)    return 'noon';
+    else if (nowMins >= noonEnd   && nowMins < sunset)     return 'afternoon';
+    else if (nowMins >= sunset    && nowMins < eveningEnd) return 'evening';
+    else                                                   return 'night';
+  }
+  // Fixed fallback
+  const h = Math.floor(nowMins / 60);
+  if      (h >= 5  && h < 11) return 'morning';
+  else if (h >= 11 && h < 13) return 'noon';
+  else if (h >= 13 && h < 18) return 'afternoon';
+  else if (h >= 18 && h < 22) return 'evening';
+  else                        return 'night';
+}
+
 // ===== CLOCK =====
 function updateClock(forceBgUpdate = false) {
   const now  = new Date();
@@ -229,15 +326,19 @@ function updateClock(forceBgUpdate = false) {
     dateEl.textContent = `${day}, ${month} ${now.getDate()}, ${now.getFullYear()}`;
   }
 
-  const t    = LANGS[currentLang];
-  const hour = now.getHours();
-  
-  let period = '';
-  if      (hour >= 5  && hour < 12) { greetingEl.textContent = t.greeting_morning;   period = 'morning'; }
-  else if (hour >= 12 && hour < 18) { greetingEl.textContent = t.greeting_afternoon; period = 'afternoon'; }
-  else if (hour >= 18 && hour < 22) { greetingEl.textContent = t.greeting_evening;   period = 'evening'; }
-  else                              { greetingEl.textContent = t.greeting_night;     period = 'night'; }
-  
+  const t = LANGS[currentLang];
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const period = (dynamicSunEnabled && sunTimesFetched) ? getSunPeriod(nowMins) : getSunPeriod(nowMins);
+
+  const greetingMap = {
+    morning:   t.greeting_morning,
+    noon:      t.greeting_noon,
+    afternoon: t.greeting_afternoon,
+    evening:   t.greeting_evening,
+    night:     t.greeting_night
+  };
+  greetingEl.textContent = greetingMap[period] || t.greeting_morning;
+
   // Apply time-based background if enabled
   if (timeBgEnabled && !unsplashEnabled) {
     if (period !== currentPeriod || forceBgUpdate) {
@@ -253,6 +354,9 @@ function updateClock(forceBgUpdate = false) {
 }
 setInterval(updateClock, 1000);
 updateClock();
+// Fetch sun times asynchronously on start (won't block the UI)
+fetchDynamicSunTimes().then(() => updateClock(true));
+
 
 // ===== STARS =====
 function createStars(count = 120) {
@@ -440,10 +544,11 @@ timeBgToggle.addEventListener('change', () => {
 
 applyTimeBgBtn.addEventListener('click', () => {
   timeBgUrls = {
-    morning: bgMorning.value.trim(),
+    morning:   bgMorning.value.trim(),
+    noon:      bgNoon.value.trim(),
     afternoon: bgAfternoon.value.trim(),
-    evening: bgEvening.value.trim(),
-    night: bgNight.value.trim()
+    evening:   bgEvening.value.trim(),
+    night:     bgNight.value.trim()
   };
   
   // Feedback
@@ -454,6 +559,19 @@ applyTimeBgBtn.addEventListener('click', () => {
   updateClock(true); // force application
   saveSettings();
 });
+
+// dynamicSunToggle
+if (dynamicSunToggle) {
+  dynamicSunToggle.addEventListener('change', () => {
+    dynamicSunEnabled = dynamicSunToggle.checked;
+    if (dynamicSunEnabled && !sunTimesFetched) {
+      fetchDynamicSunTimes().then(() => updateClock(true));
+    } else {
+      updateClock(true);
+    }
+    saveSettings();
+  });
+}
 
 
 // ===== SETTINGS PANEL =====
@@ -635,7 +753,8 @@ function saveSettings() {
     timeBgEnabled,
     timeBgUrls,
     unsplashKeyword,
-    unsplashEnabled
+    unsplashEnabled,
+    dynamicSunEnabled
   };
   try {
     if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -677,11 +796,16 @@ function loadSettings() {
       if (unsplashInputs) unsplashInputs.style.display = unsplashEnabled ? 'block' : 'none';
     }
     if (data.timeBgUrls) {
-      timeBgUrls = data.timeBgUrls;
-      bgMorning.value = timeBgUrls.morning || '';
+      timeBgUrls = { morning: '', noon: '', afternoon: '', evening: '', night: '', ...data.timeBgUrls };
+      bgMorning.value   = timeBgUrls.morning   || '';
+      if (bgNoon)      bgNoon.value      = timeBgUrls.noon      || '';
       bgAfternoon.value = timeBgUrls.afternoon || '';
-      bgEvening.value = timeBgUrls.evening || '';
-      bgNight.value = timeBgUrls.night || '';
+      bgEvening.value   = timeBgUrls.evening   || '';
+      bgNight.value     = timeBgUrls.night     || '';
+    }
+    if (data.dynamicSunEnabled !== undefined) {
+      dynamicSunEnabled = data.dynamicSunEnabled;
+      if (dynamicSunToggle) dynamicSunToggle.checked = dynamicSunEnabled;
     }
 
     if (data.bgImage) {
