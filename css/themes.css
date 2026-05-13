@@ -1,0 +1,175 @@
+/* ================================================================
+   THEMES.CSS — Background Layers, Gradient Themes, Stars, Waves,
+                Animations
+   ================================================================ */
+
+/* ===== BACKGROUND LAYER ===== */
+.bg-layer {
+  position: fixed; inset: 0;
+  z-index: 0;
+  background-size: 400% 400%;
+  transition: background 0.8s ease;
+  animation: gradientShift 12s ease infinite;
+}
+
+/* ===== BACKGROUND IMAGE LAYER ===== */
+.bg-image-layer {
+  position: fixed; inset: 0;
+  z-index: 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: none;
+  transition: opacity 0.6s ease;
+}
+.bg-image-layer.has-image { display: block; }
+
+.bg-overlay {
+  position: fixed; inset: 0;
+  z-index: 2;
+  background: rgba(0,0,0,0.15);
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+.bg-overlay.has-image { background: rgba(0,0,0,0.3); }
+
+/* ===== THEMES ===== */
+body[data-theme="aurora"] .bg-layer {
+  background: linear-gradient(135deg,
+    #0f0c29 0%, #302b63 25%, #24243e 50%,
+    #1a1a4e 75%, #0d0d2b 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite;
+}
+body[data-theme="aurora"] .bg-layer::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(120,40,200,0.45) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 60%, rgba(0,200,255,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 80%, rgba(255,80,180,0.3) 0%, transparent 60%);
+  animation: auroraMove 8s ease-in-out infinite alternate;
+}
+
+body[data-theme="ocean"] .bg-layer {
+  background: linear-gradient(180deg,
+    #020818 0%, #041232 20%, #0a2a6e 50%, #0d3b8e 75%, #1a5276 100%);
+}
+
+body[data-theme="sunset"] .bg-layer {
+  background: linear-gradient(160deg,
+    #1a1a2e 0%, #16213e 30%,
+    #f7971e 70%, #ffd200 85%, #ff6b6b 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+body[data-theme="cosmic"] .bg-layer {
+  background: linear-gradient(135deg,
+    #0d001a 0%, #1a0035 30%, #2d0060 60%,
+    #1a0040 80%, #0d001a 100%);
+}
+body[data-theme="cosmic"] .bg-layer::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(180,0,255,0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 70%, rgba(255,0,150,0.4) 0%, transparent 50%);
+  animation: auroraMove 10s ease-in-out infinite alternate;
+}
+
+body[data-theme="forest"] .bg-layer {
+  background: linear-gradient(160deg,
+    #0a1628 0%, #0d2137 20%, #1a3a2a 50%,
+    #1e4620 75%, #0d2a10 100%);
+  background-size: 300% 300%;
+  animation: gradientShift 14s ease infinite;
+}
+body[data-theme="forest"] .bg-layer::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,200,80,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(0,100,40,0.3) 0%, transparent 50%);
+}
+
+body[data-theme="minimal"] .bg-layer {
+  background: linear-gradient(145deg, #0f0f13 0%, #1a1a24 50%, #0d0d16 100%);
+}
+body[data-theme="minimal"] .bg-layer::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.1) 0%, transparent 50%);
+}
+
+/* ===== STARS ===== */
+.stars-container {
+  position: fixed; inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+body[data-theme="cosmic"] .stars-container,
+body[data-theme="minimal"] .stars-container {
+  opacity: 1;
+}
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+}
+
+/* ===== WAVES ===== */
+.waves-container {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 4;
+  height: 200px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+body[data-theme="ocean"] .waves-container { opacity: 1; }
+.wave { position: absolute; bottom: 0; width: 100%; height: 200px; }
+.wave path { fill: rgba(255,255,255,0.05); }
+.wave-1 { animation: waveMove 7s linear infinite; }
+.wave-2 { animation: waveMove 10s linear infinite reverse; }
+.wave-2 path { fill: rgba(255,255,255,0.03); }
+.wave-3 { animation: waveMove 13s linear infinite; }
+.wave-3 path { fill: rgba(0,100,255,0.08); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes auroraMove {
+  0%   { opacity: 0.6; transform: scale(1) translate(0, 0); }
+  50%  { opacity: 1;   transform: scale(1.1) translate(3%, 2%); }
+  100% { opacity: 0.7; transform: scale(0.95) translate(-2%, 1%); }
+}
+
+@keyframes waveMove {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.4); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
