@@ -1,3 +1,44 @@
+// ===== INDEXEDDB UTILS =====
+const DB_NAME = 'NewTabDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'images';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveLocalImageDB(key, blob) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.put(blob, key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getLocalImageDB(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
 // ===== CONSTANTS =====
 const DAYS_VI = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
 const MONTHS_VI = ['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6',
@@ -28,6 +69,20 @@ const LANGS = {
     greeting_afternoon:'🌤️ Chào buổi chiều',
     greeting_evening:  '🌆 Chào buổi tối',
     greeting_night:    '🌙 Chúc ngủ ngon',
+    advanced_settings: 'Cài đặt nâng cao',
+    time_bg_toggle:    'Ảnh nền theo thời gian',
+    time_bg_hint:      'Thiết lập ảnh khác nhau cho Sáng, Chiều, Tối, Đêm.',
+    time_morning:      'Sáng (05:00 - 12:00)',
+    time_afternoon:    'Chiều (12:00 - 18:00)',
+    time_evening:      'Tối (18:00 - 22:00)',
+    time_night:        'Đêm (22:00 - 05:00)',
+    apply_time_bg:     'Áp dụng Ảnh theo thời gian',
+    local_upload:      'Tải ảnh lên (Local)',
+    unsplash_toggle:   'Ảnh nền theo từ khóa',
+    todo_title:        'Mục tiêu hôm nay',
+    section_sync:      'Dữ liệu & Đồng bộ',
+    export_settings:   'Xuất cấu hình',
+    import_settings:   'Nhập cấu hình',
   },
   en: {
     settings_title:    'Background Settings',
@@ -49,6 +104,20 @@ const LANGS = {
     greeting_afternoon:'🌤️ Good afternoon',
     greeting_evening:  '🌆 Good evening',
     greeting_night:    '🌙 Good night',
+    advanced_settings: 'Advanced Settings',
+    time_bg_toggle:    'Time-based background',
+    time_bg_hint:      'Set different images for morning, afternoon, evening, and night.',
+    time_morning:      'Morning (05:00 - 12:00)',
+    time_afternoon:    'Afternoon (12:00 - 18:00)',
+    time_evening:      'Evening (18:00 - 22:00)',
+    time_night:        'Night (22:00 - 05:00)',
+    apply_time_bg:     'Apply Time Backgrounds',
+    local_upload:      'Upload Local Image',
+    unsplash_toggle:   'Dynamic Keyword Image',
+    todo_title:        'Daily Focus',
+    section_sync:      'Data & Sync',
+    export_settings:   'Export Settings',
+    import_settings:   'Import Settings',
   }
 };
 
@@ -67,17 +136,42 @@ const customCssStyle = document.getElementById('customCssStyle');
 const cssSection     = document.getElementById('cssEditorSection');
 const searchInput    = document.getElementById('searchInput');
 const starsContainer = document.getElementById('starsContainer');
+const todoList       = document.getElementById('todoList');
+const todoInput      = document.getElementById('todoInput');
 // Image & Glass
 const bgImageLayer   = document.getElementById('bgImageLayer');
 const bgOverlay      = document.getElementById('bgOverlay');
 const bgImageUrlEl   = document.getElementById('bgImageUrl');
 const applyImageBtn  = document.getElementById('applyImageBtn');
+const localUploadBtn = document.getElementById('localUploadBtn');
+const localUploadInput = document.getElementById('localUploadInput');
 const bgImageOpacity = document.getElementById('bgImageOpacity');
 const opacityValue   = document.getElementById('opacityValue');
 const removeImageBtn = document.getElementById('removeImageBtn');
 const glassToggle    = document.getElementById('glassToggle');
 const glassIntensity = document.getElementById('glassIntensity');
 const glassValue     = document.getElementById('glassValue');
+// Advanced Settings
+const advancedToggleBtn = document.getElementById('advancedToggleBtn');
+const advancedContent   = document.getElementById('advancedContent');
+const timeBgToggle      = document.getElementById('timeBgToggle');
+const timeBgInputs      = document.getElementById('timeBgInputs');
+const applyTimeBgBtn    = document.getElementById('applyTimeBgBtn');
+const bgMorning         = document.getElementById('bgMorning');
+const bgAfternoon       = document.getElementById('bgAfternoon');
+const bgEvening         = document.getElementById('bgEvening');
+const bgNight           = document.getElementById('bgNight');
+
+// Unsplash
+const unsplashToggle    = document.getElementById('unsplashToggle');
+const unsplashInputs    = document.getElementById('unsplashInputs');
+const unsplashInput     = document.getElementById('unsplashInput');
+const applyUnsplashBtn  = document.getElementById('applyUnsplashBtn');
+
+// Sync
+const exportSettingsBtn = document.getElementById('exportSettingsBtn');
+const importSettingsBtn = document.getElementById('importSettingsBtn');
+const importSettingsInput = document.getElementById('importSettingsInput');
 
 // ===== STATE =====
 let currentTheme    = 'aurora';
@@ -87,6 +181,12 @@ let currentOpacity  = 60;
 let glassEnabled    = true;
 let glassBlur       = 20;
 let currentLang     = 'vi';
+let timeBgEnabled   = false;
+let timeBgUrls      = { morning: '', afternoon: '', evening: '', night: '' };
+let currentPeriod   = ''; // tracks the active time period
+let unsplashKeyword = '';
+let unsplashEnabled = false;
+let tasksList       = [];
 
 // ===== I18N =====
 function applyLanguage(lang) {
@@ -113,7 +213,7 @@ function applyLanguage(lang) {
 }
 
 // ===== CLOCK =====
-function updateClock() {
+function updateClock(forceBgUpdate = false) {
   const now  = new Date();
   const h    = String(now.getHours()).padStart(2, '0');
   const m    = String(now.getMinutes()).padStart(2, '0');
@@ -131,10 +231,25 @@ function updateClock() {
 
   const t    = LANGS[currentLang];
   const hour = now.getHours();
-  if      (hour >= 5  && hour < 12) greetingEl.textContent = t.greeting_morning;
-  else if (hour >= 12 && hour < 18) greetingEl.textContent = t.greeting_afternoon;
-  else if (hour >= 18 && hour < 22) greetingEl.textContent = t.greeting_evening;
-  else                              greetingEl.textContent = t.greeting_night;
+  
+  let period = '';
+  if      (hour >= 5  && hour < 12) { greetingEl.textContent = t.greeting_morning;   period = 'morning'; }
+  else if (hour >= 12 && hour < 18) { greetingEl.textContent = t.greeting_afternoon; period = 'afternoon'; }
+  else if (hour >= 18 && hour < 22) { greetingEl.textContent = t.greeting_evening;   period = 'evening'; }
+  else                              { greetingEl.textContent = t.greeting_night;     period = 'night'; }
+  
+  // Apply time-based background if enabled
+  if (timeBgEnabled && !unsplashEnabled) {
+    if (period !== currentPeriod || forceBgUpdate) {
+      currentPeriod = period;
+      const url = timeBgUrls[period];
+      if (url) {
+        applyBgImage(url, currentOpacity, true);
+      } else {
+        removeImage();
+      }
+    }
+  }
 }
 setInterval(updateClock, 1000);
 updateClock();
@@ -186,7 +301,7 @@ function applyCustomCSS(css) {
 
 // ===== BACKGROUND IMAGE =====
 // silent=true: called from loadSettings (no button feedback, no alert on error)
-function applyBgImage(url, opacity, silent = false) {
+function applyBgImage(url, opacity, silent = false, isLocal = false) {
   if (!url) { removeImage(); return; }
 
   if (!silent) {
@@ -207,7 +322,7 @@ function applyBgImage(url, opacity, silent = false) {
         bgImageLayer.style.opacity = String(opacity / 100);
       });
     });
-    currentBgImage = url;
+    currentBgImage = isLocal ? 'local' : url;
     currentOpacity = opacity;
     if (!silent) {
       saveSettings(); // Save AFTER state is set (onload is async)
@@ -230,7 +345,7 @@ function applyBgImage(url, opacity, silent = false) {
       bgImageLayer.style.opacity = String(opacity / 100);
       bgImageLayer.classList.add('has-image');
       bgOverlay.classList.add('has-image');
-      currentBgImage = url;
+      currentBgImage = isLocal ? 'local' : url;
       currentOpacity = opacity;
     }
   };
@@ -265,6 +380,27 @@ applyImageBtn.addEventListener('click', () => {
 bgImageUrlEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') applyImageBtn.click();
 });
+localUploadBtn.addEventListener('click', () => {
+  localUploadInput.click();
+});
+localUploadInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const originalText = localUploadBtn.textContent;
+  localUploadBtn.textContent = '⏳';
+  try {
+    await saveLocalImageDB('localBg', file);
+    const url = URL.createObjectURL(file);
+    applyBgImage(url, currentOpacity, false, true);
+    bgImageUrlEl.value = '';
+  } catch (err) {
+    console.error('Failed to save local image', err);
+    alert('Failed to save image locally.');
+  } finally {
+    localUploadBtn.textContent = originalText;
+    e.target.value = '';
+  }
+});
 bgImageOpacity.addEventListener('input', () => {
   currentOpacity = parseInt(bgImageOpacity.value);
   opacityValue.textContent = `${currentOpacity}%`;
@@ -278,6 +414,44 @@ glassIntensity.addEventListener('input', () => {
   glassBlur = parseInt(glassIntensity.value);
   glassValue.textContent = `${glassBlur}px`;
   document.documentElement.style.setProperty('--glass-blur-amount', `${glassBlur}px`);
+  saveSettings();
+});
+
+// ===== ADVANCED SETTINGS =====
+advancedToggleBtn.addEventListener('click', () => {
+  advancedToggleBtn.classList.toggle('expanded');
+  advancedContent.classList.toggle('expanded');
+});
+
+timeBgToggle.addEventListener('change', () => {
+  timeBgEnabled = timeBgToggle.checked;
+  timeBgInputs.classList.toggle('visible', timeBgEnabled);
+  bgImageUrlEl.disabled = timeBgEnabled;
+  applyImageBtn.disabled = timeBgEnabled;
+  
+  if (timeBgEnabled) {
+    updateClock(true); // force background update for current period
+  } else {
+    // Revert to single image
+    applyBgImage(currentBgImage, currentOpacity, true);
+  }
+  saveSettings();
+});
+
+applyTimeBgBtn.addEventListener('click', () => {
+  timeBgUrls = {
+    morning: bgMorning.value.trim(),
+    afternoon: bgAfternoon.value.trim(),
+    evening: bgEvening.value.trim(),
+    night: bgNight.value.trim()
+  };
+  
+  // Feedback
+  const originalText = LANGS[currentLang].apply_time_bg;
+  applyTimeBgBtn.textContent = '✅ ' + originalText;
+  setTimeout(() => { applyTimeBgBtn.textContent = originalText; }, 1500);
+  
+  updateClock(true); // force application
   saveSettings();
 });
 
@@ -328,6 +502,125 @@ searchInput.addEventListener('keydown', (e) => {
     }
   }
 });
+// ===== UNSPLASH =====
+unsplashToggle.addEventListener('change', () => {
+  unsplashEnabled = unsplashToggle.checked;
+  if (unsplashInputs) unsplashInputs.style.display = unsplashEnabled ? 'block' : 'none';
+  if (unsplashEnabled && unsplashKeyword) {
+    applyUnsplash();
+  } else if (!unsplashEnabled) {
+    // Revert to normal
+    if (timeBgEnabled) {
+      updateClock(true);
+    } else if (currentBgImage === 'local') {
+      getLocalImageDB('localBg').then(blob => {
+        if (blob) applyBgImage(URL.createObjectURL(blob), currentOpacity, false, true);
+      }).catch(console.error);
+    } else {
+      applyBgImage(currentBgImage, currentOpacity);
+    }
+  }
+  saveSettings();
+});
+
+applyUnsplashBtn.addEventListener('click', () => {
+  unsplashKeyword = unsplashInput.value.trim();
+  applyUnsplash();
+  saveSettings();
+});
+
+function applyUnsplash(silent = false) {
+  if (!unsplashKeyword) return;
+  const originalText = applyUnsplashBtn ? applyUnsplashBtn.textContent : '✓';
+  if (applyUnsplashBtn && !silent) applyUnsplashBtn.textContent = '⏳';
+  
+  const url = `https://loremflickr.com/1920/1080/${encodeURIComponent(unsplashKeyword)}?random=${Date.now()}`;
+  
+  const testImg = new Image();
+  testImg.onload = () => {
+    applyBgImage(url, currentOpacity, silent);
+    if (applyUnsplashBtn && !silent) {
+      applyUnsplashBtn.textContent = '✅';
+      setTimeout(() => { applyUnsplashBtn.textContent = originalText; }, 1500);
+    }
+  };
+  testImg.onerror = () => {
+    if (applyUnsplashBtn && !silent) {
+      applyUnsplashBtn.textContent = '❌';
+      setTimeout(() => { applyUnsplashBtn.textContent = originalText; }, 1500);
+      alert('Failed to load dynamic background. Using fallback.');
+    }
+  };
+  testImg.src = url;
+}
+
+// ===== EXPORT / IMPORT SETTINGS =====
+exportSettingsBtn.addEventListener('click', () => {
+  const data = {
+    theme: currentTheme,
+    customCSS,
+    bgImage: currentBgImage,
+    bgOpacity: currentOpacity,
+    glassEnabled,
+    glassBlur,
+    lang: currentLang,
+    timeBgEnabled,
+    timeBgUrls,
+    unsplashKeyword,
+    unsplashEnabled,
+    tasks: tasksList // include tasks in export
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'newtab_settings_backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  const originalText = exportSettingsBtn.textContent;
+  exportSettingsBtn.textContent = '✅';
+  setTimeout(() => { exportSettingsBtn.textContent = originalText; }, 1500);
+});
+
+importSettingsBtn.addEventListener('click', () => {
+  importSettingsInput.click();
+});
+
+importSettingsInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      
+      // Update local storage
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.set({ newtabSettings: data });
+        if (data.tasks) {
+          chrome.storage.local.set({ newtabTasks: data.tasks });
+        }
+      } else {
+        localStorage.setItem('newtabSettings', JSON.stringify(data));
+        if (data.tasks) {
+          localStorage.setItem('newtabTasks', JSON.stringify(data.tasks));
+        }
+      }
+      
+      // Reload settings & UI
+      window.location.reload();
+      
+    } catch (err) {
+      alert('Failed to parse settings JSON. Invalid file.');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = ''; // reset
+});
 
 // ===== STORAGE =====
 function saveSettings() {
@@ -338,7 +631,11 @@ function saveSettings() {
     bgOpacity: currentOpacity,
     glassEnabled,
     glassBlur,
-    lang: currentLang
+    lang: currentLang,
+    timeBgEnabled,
+    timeBgUrls,
+    unsplashKeyword,
+    unsplashEnabled
   };
   try {
     if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -349,17 +646,65 @@ function saveSettings() {
   } catch(e) { console.warn('Could not save settings:', e); }
 }
 
+function saveTasks() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.set({ newtabTasks: tasksList });
+    } else {
+      localStorage.setItem('newtabTasks', JSON.stringify(tasksList));
+    }
+  } catch(e) { console.warn('Could not save tasks:', e); }
+}
+
 function loadSettings() {
   const apply = (data) => {
     if (!data) return;
     if (data.theme)      applyTheme(data.theme);
     if (data.customCSS)  { customCSS = data.customCSS; cssEditor.value = data.customCSS; if (data.theme === 'custom') applyCustomCSS(data.customCSS); }
+    // Load Advanced Settings First
+    if (data.timeBgEnabled !== undefined) {
+      timeBgEnabled = data.timeBgEnabled;
+      timeBgToggle.checked = timeBgEnabled;
+      timeBgInputs.classList.toggle('visible', timeBgEnabled);
+      bgImageUrlEl.disabled = timeBgEnabled;
+      applyImageBtn.disabled = timeBgEnabled;
+    }
+    if (data.unsplashEnabled !== undefined) {
+      unsplashEnabled = data.unsplashEnabled;
+      unsplashKeyword = data.unsplashKeyword || '';
+      if (unsplashToggle) unsplashToggle.checked = unsplashEnabled;
+      if (unsplashInput) unsplashInput.value = unsplashKeyword;
+      if (unsplashInputs) unsplashInputs.style.display = unsplashEnabled ? 'block' : 'none';
+    }
+    if (data.timeBgUrls) {
+      timeBgUrls = data.timeBgUrls;
+      bgMorning.value = timeBgUrls.morning || '';
+      bgAfternoon.value = timeBgUrls.afternoon || '';
+      bgEvening.value = timeBgUrls.evening || '';
+      bgNight.value = timeBgUrls.night || '';
+    }
+
     if (data.bgImage) {
       const savedOpacity = data.bgOpacity ?? 60;
-      bgImageUrlEl.value         = data.bgImage;
+      bgImageUrlEl.value         = data.bgImage === 'local' ? '' : data.bgImage;
       bgImageOpacity.value       = savedOpacity;
       opacityValue.textContent   = `${savedOpacity}%`;
-      applyBgImage(data.bgImage, savedOpacity, true); // silent — no button/alert
+      currentBgImage             = data.bgImage;
+      currentOpacity             = savedOpacity;
+      if (unsplashEnabled && unsplashKeyword) {
+        applyUnsplash(true);
+      } else if (!timeBgEnabled) {
+        if (data.bgImage === 'local') {
+          getLocalImageDB('localBg').then(blob => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              applyBgImage(url, savedOpacity, true, true);
+            }
+          }).catch(console.error);
+        } else {
+          applyBgImage(data.bgImage, savedOpacity, true); // silent
+        }
+      }
     }
     const ge = data.glassEnabled !== undefined ? data.glassEnabled : true;
     const gb = data.glassBlur    !== undefined ? data.glassBlur    : 20;
@@ -380,6 +725,78 @@ function loadSettings() {
   } catch(e) { console.warn('Could not load settings:', e); }
 }
 
+function loadTasks() {
+  const applyTasks = (tasks) => {
+    if (tasks && Array.isArray(tasks)) {
+      tasksList = tasks;
+    } else {
+      tasksList = [];
+    }
+    if (typeof renderTasks === 'function') renderTasks();
+  };
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.get('newtabTasks', (result) => { applyTasks(result.newtabTasks); });
+    } else {
+      const raw = localStorage.getItem('newtabTasks');
+      if (raw) applyTasks(JSON.parse(raw));
+    }
+  } catch(e) { console.warn('Could not load tasks:', e); }
+}
+
+// ===== TODO WIDGET =====
+function renderTasks() {
+  if (!todoList) return;
+  todoList.innerHTML = '';
+  tasksList.forEach((task, index) => {
+    const li = document.createElement('li');
+    li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'todo-checkbox';
+    checkbox.checked = task.completed;
+    checkbox.addEventListener('change', () => {
+      tasksList[index].completed = checkbox.checked;
+      renderTasks();
+      saveTasks();
+    });
+    
+    const textSpan = document.createElement('span');
+    textSpan.className = 'todo-text';
+    textSpan.textContent = task.text;
+    
+    const delBtn = document.createElement('button');
+    delBtn.className = 'todo-delete';
+    delBtn.innerHTML = '×';
+    delBtn.title = 'Delete';
+    delBtn.addEventListener('click', () => {
+      tasksList.splice(index, 1);
+      renderTasks();
+      saveTasks();
+    });
+    
+    li.appendChild(checkbox);
+    li.appendChild(textSpan);
+    li.appendChild(delBtn);
+    todoList.appendChild(li);
+  });
+}
+
+if (todoInput) {
+  todoInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const text = todoInput.value.trim();
+      if (text) {
+        tasksList.push({ text, completed: false });
+        todoInput.value = '';
+        renderTasks();
+        saveTasks();
+      }
+    }
+  });
+}
+
 // ===== LANG BUTTONS =====
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -390,3 +807,4 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 
 // ===== INIT =====
 loadSettings();
+loadTasks();

@@ -43,6 +43,15 @@
         <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm trên Google..." autocomplete="off">
       </div>
     </div>
+    
+    <!-- Todo Widget -->
+    <div class="todo-widget glass-card">
+      <div class="todo-header">
+        <h3 data-i18n="todo_title">Daily Focus</h3>
+      </div>
+      <ul class="todo-list" id="todoList"></ul>
+      <input type="text" id="todoInput" class="todo-input" placeholder="What's your focus today?" autocomplete="off">
+    </div>
   </main>
 
   <button class="settings-btn" id="settingsBtn" title="Cài đặt nền">
@@ -107,6 +116,10 @@
           <input type="url" id="bgImageUrl" class="img-url-input" placeholder="https://example.com/photo.jpg" autocomplete="off">
           <button class="apply-img-btn" id="applyImageBtn" title="Apply">✓</button>
         </div>
+        <div class="img-input-row" style="margin-top: 8px;">
+          <button class="apply-css-btn" id="localUploadBtn" data-i18n="local_upload" style="width: 100%;">Upload Local Image</button>
+          <input type="file" id="localUploadInput" accept="image/*" style="display: none;">
+        </div>
         <div class="img-options-row">
           <label class="img-option-label">
             <span data-i18n="img_opacity_label">Image opacity</span>
@@ -133,11 +146,84 @@
         </div>
       </div>
 
-      <div class="settings-section css-editor-section" id="cssEditorSection">
-        <h3 data-i18n="section_css">Custom CSS</h3>
-        <p class="css-hint" id="cssHintEl">Write CSS to customize. Use <code>body</code> or <code>.bg-layer</code></p>
-        <textarea id="cssEditor" class="css-editor" spellcheck="false" placeholder="body {&#10;  background: linear-gradient(135deg, #667eea, #764ba2);&#10;}"></textarea>
-        <button class="apply-css-btn" id="applyCssBtn" data-i18n="apply_css">Apply CSS</button>
+      <div class="settings-section advanced-section">
+        <button class="advanced-toggle-btn" id="advancedToggleBtn">
+          <span data-i18n="advanced_settings">Cài đặt nâng cao</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        
+        <div class="advanced-content" id="advancedContent">
+          <div class="advanced-content-inner">
+            <!-- Unsplash/Dynamic Background -->
+            <div class="settings-subsection">
+              <div class="toggle-row">
+                <label class="toggle-label" for="unsplashToggle" data-i18n="unsplash_toggle">Dynamic Keyword Image</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="unsplashToggle">
+                  <span class="toggle-thumb"></span>
+                </label>
+              </div>
+              <div class="time-bg-inputs" id="unsplashInputs" style="display: none; margin-top: 10px;">
+                <div class="img-input-row">
+                  <input type="text" id="unsplashInput" class="img-url-input" placeholder="e.g. nature, cyberpunk, minimal" autocomplete="off">
+                  <button class="apply-img-btn" id="applyUnsplashBtn" title="Apply">✓</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Time-based background -->
+            <div class="settings-subsection">
+              <div class="toggle-row">
+                <label class="toggle-label" for="timeBgToggle" data-i18n="time_bg_toggle">Ảnh nền theo thời gian</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="timeBgToggle">
+                  <span class="toggle-thumb"></span>
+                </label>
+              </div>
+              
+              <div class="time-bg-inputs" id="timeBgInputs">
+                <p class="css-hint" data-i18n="time_bg_hint">Thiết lập ảnh khác nhau cho Sáng, Chiều, Tối, Đêm.</p>
+                
+                <div class="time-input-group">
+                  <label data-i18n="time_morning">Sáng (05:00 - 12:00)</label>
+                  <input type="url" id="bgMorning" class="img-url-input" placeholder="https://..." autocomplete="off">
+                </div>
+                <div class="time-input-group">
+                  <label data-i18n="time_afternoon">Chiều (12:00 - 18:00)</label>
+                  <input type="url" id="bgAfternoon" class="img-url-input" placeholder="https://..." autocomplete="off">
+                </div>
+                <div class="time-input-group">
+                  <label data-i18n="time_evening">Tối (18:00 - 22:00)</label>
+                  <input type="url" id="bgEvening" class="img-url-input" placeholder="https://..." autocomplete="off">
+                </div>
+                <div class="time-input-group">
+                  <label data-i18n="time_night">Đêm (22:00 - 05:00)</label>
+                  <input type="url" id="bgNight" class="img-url-input" placeholder="https://..." autocomplete="off">
+                </div>
+                
+                <button class="apply-css-btn mt-2" id="applyTimeBgBtn" data-i18n="apply_time_bg">Áp dụng Ảnh theo thời gian</button>
+              </div>
+            </div>
+            
+            <!-- Custom CSS -->
+            <div class="settings-subsection css-editor-section" id="cssEditorSection">
+              <h3 data-i18n="section_css">Custom CSS</h3>
+              <p class="css-hint" id="cssHintEl">Write CSS to customize. Use <code>body</code> or <code>.bg-layer</code></p>
+              <textarea id="cssEditor" class="css-editor" spellcheck="false" placeholder="body {&#10;  background: linear-gradient(135deg, #667eea, #764ba2);&#10;}"></textarea>
+              <button class="apply-css-btn" id="applyCssBtn" data-i18n="apply_css">Apply CSS</button>
+            </div>
+            
+            <!-- Sync Settings -->
+            <div class="settings-subsection sync-section" id="syncSection">
+              <h3 data-i18n="section_sync">Data & Sync</h3>
+              <div class="sync-buttons" style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="apply-css-btn" id="exportSettingsBtn" data-i18n="export_settings" style="flex: 1;">Export Settings</button>
+                <button class="apply-css-btn" id="importSettingsBtn" data-i18n="import_settings" style="flex: 1;">Import Settings</button>
+                <input type="file" id="importSettingsInput" accept=".json" style="display: none;">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>

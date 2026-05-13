@@ -1,0 +1,17 @@
+# IDEs and Tools
+.gemini/
+.agent/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# OpenSpec
+openspec/changes/archive/
